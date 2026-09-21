@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-padding-top: 4.5rem;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-[15px] leading-relaxed text-fg antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(61 184 160 / 0.32);
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #3db8a0;
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  kbd {
+    @apply rounded border border-line-strong bg-raised px-1.5 py-0.5 font-mono text-[11px] leading-none text-muted;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply fixed left-3 top-3 z-[60] -translate-y-20 rounded-md border border-accent bg-surface px-3 py-2 text-sm font-medium text-fg;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
+
+  /* Technical metadata label: STATUS, CATEGORY, NOW. Used for labels only, never for running text. */
+  .label-mono {
+    @apply font-mono text-[11px] font-medium uppercase leading-none tracking-[0.06em] text-muted;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #3b454c transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: #3b454c;
+    border-radius: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
