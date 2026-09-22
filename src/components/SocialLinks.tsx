@@ -1,4 +1,4 @@
-import { GitBranch, Link2, Mail } from 'lucide-react'
+import { Camera, GitBranch, Link2, Mail, Music2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { SocialId, SocialLink } from '../types'
 import { cn } from '../lib/cn'
@@ -8,6 +8,8 @@ import { Button } from './Button'
 const icons: Record<SocialId, LucideIcon> = {
   github: GitBranch,
   linkedin: Link2,
+  instagram: Camera,
+  tiktok: Music2,
   email: Mail,
 }
 

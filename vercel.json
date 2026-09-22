@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/github/repos.ts": {
+      "runtime": "nodejs22.x"
+    }
+  }
+}

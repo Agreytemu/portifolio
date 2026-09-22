@@ -14,6 +14,8 @@ interface SiteConfig {
   /** Fill these in to switch the placeholder links on. Leave empty until they are real. */
   githubUsername: string
   linkedinUrl: string
+  instagramUrl: string
+  tiktokUrl: string
   email: string
   /** Path or URL of a profile photo, e.g. "/avatar.jpg" (put the file in /public). Empty shows a monogram. */
   avatarSrc: string
@@ -33,8 +35,10 @@ export const site: SiteConfig = {
     'He works across frontend, backend, databases, APIs, authentication, payments, and deployment.',
     'His current focus is building commerce and financial software that solves real-world problems.',
   ],
-  githubUsername: 'Agreytemu',
+  githubUsername: import.meta.env.VITE_GITHUB_USERNAME || 'Agreytemu',
   linkedinUrl: 'https://www.linkedin.com/in/agrey-temu-06350a437',
+  instagramUrl: import.meta.env.VITE_INSTAGRAM_URL || '',
+  tiktokUrl: import.meta.env.VITE_TIKTOK_URL || '',
   email: 'agreytemu44@gmail.com',
   avatarSrc: '',
 }
@@ -52,6 +56,18 @@ export function getSocialLinks(): SocialLink[] {
       label: 'LinkedIn',
       href: site.linkedinUrl || undefined,
       hint: 'LinkedIn link not added yet',
+    },
+    {
+      id: 'instagram',
+      label: 'Instagram',
+      href: site.instagramUrl || undefined,
+      hint: 'Instagram link not added yet',
+    },
+    {
+      id: 'tiktok',
+      label: 'TikTok',
+      href: site.tiktokUrl || undefined,
+      hint: 'TikTok link not added yet',
     },
     {
       id: 'email',

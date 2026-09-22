@@ -47,7 +47,7 @@ interface GithubCommit {
   commit: { message: string; author?: { date?: string } | null }
 }
 
-class GithubApiError extends Error {
+export class GithubApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
@@ -151,7 +151,7 @@ async function fetchRepositories(username: string): Promise<GithubResponse> {
   }
 }
 
-async function getCachedRepositories(username: string, forceRefresh: boolean): Promise<GithubResponse> {
+export async function getCachedRepositories(username: string, forceRefresh: boolean): Promise<GithubResponse> {
   const cacheKey = `${username}:${Boolean(serverToken())}`
   const current = cache.get(cacheKey)
   if (!forceRefresh && current && current.expiresAt > Date.now()) return current.value

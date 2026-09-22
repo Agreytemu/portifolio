@@ -118,7 +118,7 @@ export interface PortfolioData {
   stats: ProfileStats
 }
 
-export type SocialId = 'github' | 'linkedin' | 'email'
+export type SocialId = 'github' | 'linkedin' | 'instagram' | 'tiktok' | 'email'
 
 export interface SocialLink {
   id: SocialId
