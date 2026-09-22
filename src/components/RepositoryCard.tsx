@@ -1,4 +1,4 @@
-import { ChevronRight, Folder, GitBranch, Star } from 'lucide-react'
+import { ChevronRight, Clock3, ExternalLink, Folder, GitBranch, GitFork, Star } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { statusMeta } from '../lib/status'
 import { toneStyles } from '../lib/tones'
@@ -14,6 +14,7 @@ interface RepositoryCardProps {
 export function RepositoryCard({ project, onOpen }: RepositoryCardProps) {
   const status = statusMeta[project.status]
   const tone = toneStyles[status.tone]
+  const repositoryStatus = project.repoStatus === 'archived' ? 'Archived' : project.repoStatus === 'private' ? 'Private' : project.repoStatus === 'public' ? 'Public' : status.label
 
   return (
     <article className="group relative flex w-full flex-col rounded-lg border border-line bg-surface p-4 shadow-panel transition duration-150 hover:-translate-y-0.5 hover:border-line-strong hover:bg-[#1B2024] hover:shadow-panel-hover sm:p-5">
@@ -45,7 +46,7 @@ export function RepositoryCard({ project, onOpen }: RepositoryCardProps) {
           <dt className="label-mono">Status</dt>
           <dd className={cn('mt-1.5 flex items-center gap-1.5 text-[13px] font-medium', tone.text)}>
             <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-full', tone.dot)} />
-            {status.label}
+            {repositoryStatus}
           </dd>
         </div>
         <div>
@@ -77,18 +78,40 @@ export function RepositoryCard({ project, onOpen }: RepositoryCardProps) {
               <span className="sr-only"> stars</span>
             </span>
           )}
+          {project.forks !== undefined && (
+            <span className="inline-flex items-center gap-1">
+              <GitFork size={13} aria-hidden="true" />
+              {project.forks}
+              <span className="sr-only"> forks</span>
+            </span>
+          )}
+          {project.updatedAt && (
+            <span className="inline-flex items-center gap-1">
+              <Clock3 size={13} aria-hidden="true" />
+              {new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.updatedAt))}
+              <span className="sr-only"> last updated</span>
+            </span>
+          )}
         </div>
 
         <div className="relative z-10">
-          <Button
-            size="sm"
-            href={project.repoUrl}
-            external
-            unavailableReason={project.repoUrl ? undefined : 'Repository link not added yet'}
-          >
-            <GitBranch size={14} aria-hidden="true" />
-            GitHub
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              href={project.repoUrl}
+              external
+              unavailableReason={project.repoUrl ? undefined : 'Repository link not available'}
+            >
+              <GitBranch size={14} aria-hidden="true" />
+              GitHub
+            </Button>
+            {project.liveUrl && (
+              <Button size="sm" variant="primary" href={project.liveUrl} external>
+                <ExternalLink size={14} aria-hidden="true" />
+                Live demo
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </article>

@@ -36,6 +36,7 @@ function ModalContent({ project, onClose }: { project: Project; onClose: () => v
   useFocusTrap(panelRef, onClose)
 
   const status = statusMeta[project.status]
+  const repositoryStatus = project.repoStatus === 'archived' ? 'Archived' : project.repoStatus === 'private' ? 'Private' : project.repoStatus === 'public' ? 'Public' : status.label
   const titleId = `${project.slug}-modal-title`
 
   return (
@@ -68,8 +69,8 @@ function ModalContent({ project, onClose }: { project: Project; onClose: () => v
               {project.title}
             </h2>
             <div className="mt-2 flex flex-wrap gap-2">
-              <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-              {project.liveNote.toLowerCase() !== status.label.toLowerCase() && <StatusBadge>{project.liveNote}</StatusBadge>}
+              <StatusBadge tone={status.tone}>{repositoryStatus}</StatusBadge>
+              {project.liveNote.toLowerCase() !== repositoryStatus.toLowerCase() && <StatusBadge>{project.liveNote}</StatusBadge>}
             </div>
           </div>
           <button
@@ -116,7 +117,18 @@ function ModalContent({ project, onClose }: { project: Project; onClose: () => v
           </ModalSection>
 
           <ModalSection title="Current status">
-            <p className="text-sm leading-relaxed text-soft">{status.description}</p>
+            <dl className="grid grid-cols-1 gap-2 text-sm text-soft sm:grid-cols-2">
+              <div><dt className="label-mono">Visibility</dt><dd className="mt-1">{project.visibility ?? repositoryStatus}</dd></div>
+              <div><dt className="label-mono">Owner</dt><dd className="mt-1">{project.owner ?? 'Portfolio configuration'}</dd></div>
+              <div><dt className="label-mono">Default branch</dt><dd className="mt-1">{project.defaultBranch ?? 'Not available'}</dd></div>
+              <div><dt className="label-mono">Repository type</dt><dd className="mt-1">{project.isFork ? 'Fork' : 'Original repository'}</dd></div>
+              <div><dt className="label-mono">Created</dt><dd className="mt-1">{formatDate(project.createdAt)}</dd></div>
+              <div><dt className="label-mono">Updated</dt><dd className="mt-1">{formatDate(project.updatedAt)}</dd></div>
+              <div><dt className="label-mono">Last push</dt><dd className="mt-1">{formatDate(project.latestActivity)}</dd></div>
+              <div><dt className="label-mono">Stars / forks</dt><dd className="mt-1">{project.stars ?? 0} / {project.forks ?? 0}</dd></div>
+            </dl>
+            {project.topics && project.topics.length > 0 && <p className="mt-3 text-sm text-soft"><span className="label-mono">Topics</span><br />{project.topics.join(', ')}</p>}
+            {project.latestCommit && <p className="mt-3 break-words text-sm text-soft"><span className="label-mono">Latest commit</span><br />{project.latestCommit.sha.slice(0, 7)} {project.latestCommit.message}</p>}
           </ModalSection>
 
           <ModalSection title="Screenshots">
@@ -156,4 +168,10 @@ function ModalContent({ project, onClose }: { project: Project; onClose: () => v
       </m.div>
     </m.div>
   )
+}
+
+function formatDate(value?: string) {
+  if (!value) return 'Not available'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Not available' : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date)
 }

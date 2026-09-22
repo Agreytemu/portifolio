@@ -9,16 +9,17 @@ import { computeStats } from './stats'
 export function loadStaticPortfolio(): PortfolioData {
   return {
     projects,
+    repositories: [],
     activity: generateDemoActivity(),
     stats: computeStats(projects),
   }
 }
 
-/** True only when a GitHub username is set and VITE_GITHUB_SYNC=true. */
+/** The repository API is server-backed, so the browser never calls GitHub directly. */
 export function isGithubSyncEnabled(): boolean {
-  return import.meta.env.VITE_GITHUB_SYNC === 'true' && site.githubUsername.length > 0
+  return site.githubUsername.length > 0
 }
 
-export function loadGithubPortfolio(signal?: AbortSignal): Promise<PortfolioData> {
-  return fetchGithubData(site.githubUsername, loadStaticPortfolio(), signal)
+export function loadGithubPortfolio(signal?: AbortSignal, forceRefresh = false): Promise<PortfolioData> {
+  return fetchGithubData(site.githubUsername, loadStaticPortfolio(), signal, forceRefresh)
 }

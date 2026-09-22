@@ -1,80 +1,107 @@
 import type { PortfolioData, Project } from '../types'
-import { activityFromCounts } from './activity'
 import { languageColor } from './languages'
 import { computeStats } from './stats'
 
-/**
- * Optional GitHub sync. It is off by default (see lib/dataSource.ts) and always falls back to the
- * static data when a request fails. It only touches the public, unauthenticated REST API.
- */
-
-const API_ROOT = 'https://api.github.com'
-
-interface GithubRepo {
+interface GithubRepository {
   name: string
   html_url: string
+  homepage: string | null
+  description: string | null
   stargazers_count: number
+  forks_count: number
+  topics: string[]
   language: string | null
-}
-
-interface GithubEvent {
-  type: string
+  languages: Record<string, number>
   created_at: string
-  payload?: { size?: number }
+  updated_at: string
+  pushed_at: string | null
+  archived: boolean
+  fork: boolean
+  visibility: string
+  owner: { login: string }
+  default_branch: string
+  latestCommit?: { sha: string; message: string; date?: string }
 }
 
-async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${API_ROOT}${path}`, {
-    headers: { Accept: 'application/vnd.github+json' },
+interface GithubResponse {
+  username: string
+  repositories: GithubRepository[]
+  refreshedAt: string
+}
+
+async function getJson<T>(username: string, signal?: AbortSignal, forceRefresh = false): Promise<T> {
+  const refresh = forceRefresh ? '&refresh=1' : ''
+  const response = await fetch(`/api/github/repos?username=${encodeURIComponent(username)}${refresh}`, {
+    headers: { Accept: 'application/json' },
     signal,
   })
-  if (!response.ok) throw new Error(`GitHub API request failed (${response.status}): ${path}`)
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string; status?: number; rateLimitRemaining?: string } | null
+    throw new Error(body?.error ?? `Repository API request failed (${response.status})`)
+  }
   return (await response.json()) as T
 }
 
-/** Matches repositories to static projects by name and fills in link, stars, and language. */
-function mergeRepos(projects: Project[], repos: GithubRepo[]): Project[] {
-  const byName = new Map(repos.map((repo) => [repo.name.toLowerCase(), repo] as const))
-
-  return projects.map((project) => {
-    const repo = byName.get(project.name.toLowerCase())
-    if (!repo) return project
-
-    return {
-      ...project,
-      repoUrl: repo.html_url,
-      stars: repo.stargazers_count,
-      language: repo.language ? { name: repo.language, color: languageColor(repo.language) } : project.language,
-    }
-  })
-}
-
-function countPushCommits(events: GithubEvent[]): Map<string, number> {
-  const counts = new Map<string, number>()
-  for (const event of events) {
-    if (event.type !== 'PushEvent') continue
-    const day = event.created_at.slice(0, 10)
-    counts.set(day, (counts.get(day) ?? 0) + Math.max(1, event.payload?.size ?? 1))
+function toProject(repo: GithubRepository, base: Project | undefined): Project {
+  const languages = Object.keys(repo.languages).sort((a, b) => repo.languages[b] - repo.languages[a])
+  const primaryLanguage = repo.language ?? languages[0] ?? base?.language.name ?? 'Other'
+  const fallback = base ?? {
+    slug: repo.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    title: repo.name,
+    summary: repo.description?.trim() || 'No description provided.',
+    description: repo.description?.trim() || 'No description provided.',
+    language: { name: primaryLanguage, color: languageColor(primaryLanguage) },
+    stack: languages.length ? languages.slice(0, 5) : [primaryLanguage],
+    technologies: languages,
+    status: 'coming-soon' as const,
+    liveNote: 'No live demo configured',
+    category: 'GitHub repository',
+    problem: 'Repository details are maintained on GitHub.',
+    solution: repo.description?.trim() || 'No description provided.',
+    features: [],
+    architecture: [],
   }
-  return counts
+
+  return {
+    ...fallback,
+    name: repo.name,
+    repoUrl: repo.html_url,
+    summary: repo.description?.trim() || base?.summary || 'No description provided.',
+    description: repo.description?.trim() || base?.description || 'No description provided.',
+    language: { name: primaryLanguage, color: languageColor(primaryLanguage) },
+    stack: languages.length ? languages.slice(0, 5) : base?.stack ?? [primaryLanguage],
+    technologies: languages.length ? languages : base?.technologies ?? [primaryLanguage],
+    stars: repo.stargazers_count,
+    forks: repo.forks_count,
+    topics: repo.topics,
+    languageNames: languages,
+    createdAt: repo.created_at,
+    updatedAt: repo.updated_at,
+    latestActivity: repo.pushed_at ?? repo.updated_at,
+    repoStatus: repo.archived ? 'archived' : repo.visibility === 'private' ? 'private' : 'public',
+    isFork: repo.fork,
+    visibility: repo.visibility,
+    owner: repo.owner.login,
+    defaultBranch: repo.default_branch,
+    homepage: repo.homepage ?? undefined,
+    liveUrl: repo.homepage ?? base?.liveUrl,
+    liveNote: repo.homepage ? 'Live demo available' : base?.liveNote === 'Coming soon' ? 'No live demo configured' : fallback.liveNote,
+    latestCommit: repo.latestCommit,
+  }
 }
 
-export async function fetchGithubData(
-  username: string,
-  base: PortfolioData,
-  signal?: AbortSignal,
-): Promise<PortfolioData> {
-  const user = encodeURIComponent(username)
+export async function fetchGithubData(username: string, base: PortfolioData, signal?: AbortSignal, forceRefresh = false): Promise<PortfolioData> {
+  const response = await getJson<GithubResponse>(username, signal, forceRefresh)
+  const byName = new Map(base.projects.map((project) => [project.name.toLowerCase(), project] as const))
+  const repositories = response.repositories
+    .map((repo) => toProject(repo, byName.get(repo.name.toLowerCase())))
+    .sort((a, b) => (b.latestActivity ?? '').localeCompare(a.latestActivity ?? ''))
+  const projects = base.projects.map((project) => repositories.find((repo) => repo.name === project.name) ?? project)
 
-  const [reposResult, eventsResult] = await Promise.allSettled([
-    getJson<GithubRepo[]>(`/users/${user}/repos?per_page=100&sort=pushed`, signal),
-    getJson<GithubEvent[]>(`/users/${user}/events/public?per_page=100`, signal),
-  ])
-
-  const repos = reposResult.status === 'fulfilled' ? reposResult.value : null
-  const projects = repos ? mergeRepos(base.projects, repos) : base.projects
-  const activity =
-    eventsResult.status === 'fulfilled' ? activityFromCounts(countPushCommits(eventsResult.value)) : base.activity
-
-  return { projects, activity, stats: computeStats(projects, repos?.length) }
+  return {
+    projects,
+    repositories,
+    activity: { ...base.activity, source: 'github', badge: 'Live GitHub data' },
+    stats: computeStats(projects, repositories.length),
+  }
 }

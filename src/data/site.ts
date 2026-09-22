@@ -33,9 +33,9 @@ export const site: SiteConfig = {
     'He works across frontend, backend, databases, APIs, authentication, payments, and deployment.',
     'His current focus is building commerce and financial software that solves real-world problems.',
   ],
-  githubUsername: '',
-  linkedinUrl: '',
-  email: '',
+  githubUsername: 'Agreytemu',
+  linkedinUrl: 'https://www.linkedin.com/in/agrey-temu-06350a437',
+  email: 'agreytemu44@gmail.com',
   avatarSrc: '',
 }
 

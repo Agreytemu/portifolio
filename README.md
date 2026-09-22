@@ -1,7 +1,7 @@
 # Agrey Temu — portfolio
 
 React + Vite + TypeScript + Tailwind CSS 3 + Framer Motion + Lucide.
-Dark, GitHub-inspired developer interface. Static data today, GitHub-API-ready.
+Dark, GitHub-inspired developer interface with a cached GitHub repository API.
 
 ## Run it
 
@@ -47,16 +47,25 @@ The stat cards are computed from the data files.
 - The `language` field of each project is inferred from its stack.
 - Problem / solution / architecture copy is written from the stack and descriptions you gave. Check it reads true.
 
-## GitHub integration (optional, off by default)
+## GitHub integration
 
-`src/lib/dataSource.ts` returns everything the UI needs (`PortfolioData`) synchronously from static data.
-Set `githubUsername` and create `.env.local` with `VITE_GITHUB_SYNC=true` to enable `src/lib/github.ts`, which:
+`src/lib/dataSource.ts` keeps curated portfolio content separate from the live repository collection.
+The Vite server exposes `/api/github/repos`, which fetches every public owner repository across GitHub pagination,
+enriches language data, and caches the normalized response for ten minutes. The browser only calls this local API.
 
-- matches repositories to projects by name and fills in the link, stars and language
-- builds the activity graph from public push events (about the last 90 days only; a full-year
-  contribution calendar needs the GraphQL API and a token, which should live behind a server)
+The account is configured as `Agreytemu` in `src/data/site.ts`. For higher GitHub rate limits, set `GITHUB_TOKEN` in
+the backend environment only; never use a `VITE_` variable for this token. The token must belong to `Agreytemu` and
+needs only read access to repository metadata (including private repositories) and repository contents metadata as
+required by GitHub's token model. A fine-grained token with read-only repository metadata is preferred.
 
-Failures fall back to static data. This code has not been run against the live API.
+Without `GITHUB_TOKEN`, GitHub's public API is used and private repositories cannot be returned. When the token is
+present, the backend uses the authenticated `/user/repos?visibility=all&affiliation=owner` endpoint and validates that
+the token account is `Agreytemu`. GitHub errors, authentication failures, and rate limits are returned to the UI as
+sync errors. Use the repository section's **Refresh GitHub data** action to bypass the ten-minute cache.
+
+The API is implemented as Vite server middleware for development and preview. A production deployment must run the
+same backend route (or move `server/githubApi.ts` into the host's serverless/API function) with `GITHUB_TOKEN` set
+server-side.
 
 ## Contact form
 

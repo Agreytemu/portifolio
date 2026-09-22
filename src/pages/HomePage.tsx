@@ -21,7 +21,7 @@ import { modifierLabel } from '../lib/platform'
 import type { Project } from '../types'
 
 export function HomePage() {
-  const { projects, activity, stats } = usePortfolioData()
+  const { projects, repositories, activity, stats, githubLoading, githubError, refreshGithub } = usePortfolioData()
   const [selected, setSelected] = useState<Project | null>(null)
   const openProject = useCallback((project: Project) => setSelected(project), [])
   const closeProject = useCallback(() => setSelected(null), [])
@@ -47,7 +47,13 @@ export function HomePage() {
         <OverviewSection projects={projects} onOpenProject={openProject} />
         <AboutSection />
         <FeaturedProjectSection project={projects.find((project) => project.featured)} onOpenProject={openProject} />
-        <RepositoriesSection projects={projects} onOpenProject={openProject} />
+        <RepositoriesSection
+          projects={repositories}
+          onOpenProject={openProject}
+          githubLoading={githubLoading}
+          githubError={githubError}
+          onRefresh={refreshGithub}
+        />
         <ActivitySection activity={activity} stats={stats} projects={projects} onOpenProject={openProject} />
         <TechStackSection projects={projects} />
         <HowIBuildSection />

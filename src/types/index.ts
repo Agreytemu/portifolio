@@ -36,6 +36,23 @@ export interface Project {
   /** Shown when there is no liveUrl. */
   liveNote: string
   stars?: number
+  forks?: number
+  topics?: string[]
+  languageNames?: string[]
+  createdAt?: string
+  updatedAt?: string
+  latestActivity?: string
+  repoStatus?: 'public' | 'private' | 'archived'
+  isFork?: boolean
+  visibility?: string
+  owner?: string
+  defaultBranch?: string
+  homepage?: string
+  latestCommit?: {
+    sha: string
+    message: string
+    date?: string
+  }
   /** Short classification shown as card metadata, e.g. "Commerce / Fintech". */
   category: string
   problem: string
@@ -96,6 +113,7 @@ export interface ProfileStats {
 
 export interface PortfolioData {
   projects: Project[]
+  repositories: Project[]
   activity: ActivityData
   stats: ProfileStats
 }
