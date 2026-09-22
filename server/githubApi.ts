@@ -61,6 +61,7 @@ interface ApiRequest {
   method?: string
   originalUrl?: string
   url?: string
+  headers?: Record<string, string | string[] | undefined>
 }
 
 interface ApiResponse {
@@ -74,6 +75,11 @@ const cache = new Map<string, CacheEntry>()
 function serverToken(): string | undefined {
   const processLike = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
   return processLike?.env?.GITHUB_TOKEN
+}
+
+function frontendOrigin(): string {
+  const processLike = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+  return processLike?.env?.FRONTEND_ORIGIN || '*'
 }
 
 function headers(): HeadersInit {
@@ -163,6 +169,14 @@ export async function getCachedRepositories(username: string, forceRefresh: bool
 
 function attachGithubRoute(server: { middlewares: { use: (path: string, handler: (request: ApiRequest, response: ApiResponse, next: () => void) => Promise<void>) => void } }) {
   server.middlewares.use('/api/github/repos', async (request: ApiRequest, response: ApiResponse, next: () => void) => {
+        response.setHeader('Access-Control-Allow-Origin', frontendOrigin())
+        response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        response.setHeader('Vary', 'Origin')
+        if (request.method === 'OPTIONS') {
+          response.statusCode = 204
+          response.end('')
+          return
+        }
         if (request.method !== 'GET') return next()
 
         try {
