@@ -31,7 +31,8 @@ interface GithubResponse {
 
 async function getJson<T>(username: string, signal?: AbortSignal, forceRefresh = false): Promise<T> {
   const refresh = forceRefresh ? '&refresh=1' : ''
-  const response = await fetch(`/api/github/repos?username=${encodeURIComponent(username)}${refresh}`, {
+  const apiBaseUrl = (import.meta.env.VITE_GITHUB_API_URL || 'https://portifolio-mgt5.onrender.com').replace(/\/$/, '')
+  const response = await fetch(`${apiBaseUrl}/api/github/repos?username=${encodeURIComponent(username)}${refresh}`, {
     headers: { Accept: 'application/json' },
     signal,
   })

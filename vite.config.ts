@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), githubApiPlugin()],
+    preview: {
+      allowedHosts: ['portifolio-mgt5.onrender.com'],
+    },
     build: { target: 'es2022', sourcemap: false },
   }
 })

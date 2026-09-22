@@ -93,6 +93,33 @@ https://your-vercel-domain.vercel.app/api/github/repos?username=Agreytemu
 
 The repository section's refresh action calls the same route with `refresh=1` to bypass the ten-minute cache.
 
+### Host the API on Render
+
+If the frontend is on Vercel and the API is on Render, create a Render web service from this repository. Render can use
+the included `render.yaml`, or use these settings manually:
+
+```text
+Build command: npm install && npm run build
+Start command: npm run preview -- --host 0.0.0.0 --port 10000
+```
+
+Add these Render environment variables:
+
+```env
+GITHUB_TOKEN=your_server_only_github_token
+FRONTEND_ORIGIN=https://your-vercel-domain.vercel.app
+```
+
+Then add this variable in the Vercel frontend project and redeploy:
+
+```env
+VITE_GITHUB_API_URL=https://your-render-service.onrender.com
+```
+
+The frontend will call `https://your-render-service.onrender.com/api/github/repos`, while the token remains only on
+Render. Do not add `GITHUB_TOKEN` to Vercel as a `VITE_` variable. If the Vercel variable is omitted, the frontend
+uses the default Render service URL `https://portifolio-mgt5.onrender.com`.
+
 ## Contact form
 
 Frontend-only. If `email` is set, submitting opens the visitor's mail app with the message prefilled.
